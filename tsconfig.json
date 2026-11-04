@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "paths": {
+      "@resourcehub/shared": ["./packages/shared/dist/index.d.ts"]
+    }
+  },
+  "include": ["api/**/*", "packages/shared/src/**/*"]
+}

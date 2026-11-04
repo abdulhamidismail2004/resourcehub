@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from root or apps/api
+// Load .env
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config();
 
@@ -14,15 +14,16 @@ export const config = {
   host: process.env.HOST || '0.0.0.0',
   nodeEnv: process.env.NODE_ENV || 'development',
   isProduction: process.env.NODE_ENV === 'production',
-  apiUrl: process.env.API_URL || 'http://localhost:4000',
-  webUrl: process.env.WEB_URL || 'http://localhost:5173',
+  isDemoMode: process.env.DEMO_MODE === 'true' || true,
+  apiUrl: process.env.API_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:4000'),
+  webUrl: process.env.WEB_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173'),
 
   databaseUrl: process.env.DATABASE_URL || 'local',
 
-  sessionSecret: process.env.SESSION_SECRET || 'dev-session-secret-key-at-least-32-chars-long-security',
-  cookieSecret: process.env.COOKIE_SECRET || 'dev-cookie-secret-key-at-least-32-chars-long-security',
+  sessionSecret: process.env.SESSION_SECRET || 'resourcehub-demo-session-secret-key-32-chars-min',
+  cookieSecret: process.env.COOKIE_SECRET || 'resourcehub-demo-cookie-secret-key-32-chars-min',
 
-  storageDriver: (process.env.STORAGE_DRIVER || 'local') as 'local' | 's3',
+  storageDriver: (process.env.STORAGE_DRIVER || 'local') as 'local' | 's3' | 'vercel-blob',
   storageLocalDir: path.resolve(process.cwd(), process.env.STORAGE_LOCAL_DIR || './uploads'),
 
   s3: {

@@ -16,8 +16,32 @@ import { usersRoutes } from './modules/users/users.routes.js';
 import { notificationsRoutes } from './modules/notifications/notifications.routes.js';
 import { moderationRoutes } from './modules/moderation/moderation.routes.js';
 import { adminRoutes } from './modules/admin/admin.routes.js';
+import { getDb } from './db/index.js';
+import * as schema from './db/schema/index.js';
+
+let isDbReady = false;
+async function ensureDbInitialized() {
+  if (isDbReady) return;
+  try {
+    const { runMigrations } = await import('./db/migrate.js');
+    await runMigrations();
+    const db = await getDb();
+    const [existingCat] = await db.select({ id: schema.categories.id }).from(schema.categories).limit(1);
+    if (!existingCat) {
+      console.log('Seeding initial demo data...');
+      const { seedDatabase } = await import('./db/seed.js');
+      await seedDatabase();
+    }
+  } catch (err) {
+    // Graceful recovery for existing tables or concurrency
+  } finally {
+    isDbReady = true;
+  }
+}
 
 export async function buildApp(): Promise<FastifyInstance> {
+  await ensureDbInitialized();
+
   const app = fastify({
     logger: {
       level: config.isProduction ? 'info' : 'warn',
