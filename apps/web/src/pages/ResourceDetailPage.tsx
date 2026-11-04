@@ -9,6 +9,8 @@ import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { FilePreview } from '../components/resources/FilePreview';
 import { ResourceCard } from '../components/resources/ResourceCard';
+import { EditResourceModal } from '../components/resources/EditResourceModal';
+import { DeleteResourceModal } from '../components/resources/DeleteResourceModal';
 import {
   Download,
   Bookmark,
@@ -21,6 +23,8 @@ import {
   Check,
   CheckCircle,
   FileText,
+  Edit3,
+  Trash2,
 } from 'lucide-react';
 
 export const ResourceDetailPage: React.FC = () => {
@@ -42,6 +46,14 @@ export const ResourceDetailPage: React.FC = () => {
   const [reportDetails, setReportDetails] = useState('');
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
+
+  // Edit & Delete modal states
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  const isAuthor = user?.id === resource?.userId || user?.id === resource?.author?.id;
+  const isModOrAdmin = user?.role === 'admin' || user?.role === 'moderator';
+  const canManage = Boolean(isAuthenticated && (isAuthor || isModOrAdmin));
 
   useEffect(() => {
     async function fetchResource() {
@@ -277,6 +289,29 @@ export const ResourceDetailPage: React.FC = () => {
             <span>{copied ? 'Link Copied!' : 'Share'}</span>
           </Button>
 
+          {canManage && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setEditModalOpen(true)}
+                className="gap-2 text-primary border-primary/40 hover:bg-primary/10"
+              >
+                <Edit3 className="w-4 h-4" />
+                <span>Edit Resource</span>
+              </Button>
+              <Button
+                variant="destructive"
+                size="lg"
+                onClick={() => setDeleteModalOpen(true)}
+                className="gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete</span>
+              </Button>
+            </div>
+          )}
+
           <button
             onClick={() => setReportModalOpen(true)}
             className="ms-auto p-2.5 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
@@ -388,6 +423,31 @@ export const ResourceDetailPage: React.FC = () => {
           </form>
         )}
       </Modal>
+
+      {/* Edit Resource Modal */}
+      {resource && (
+        <EditResourceModal
+          isOpen={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          resource={resource}
+          onSuccess={(updated) => {
+            setResource((prev) => (prev ? { ...prev, ...updated } : null));
+          }}
+        />
+      )}
+
+      {/* Delete Resource Modal */}
+      {resource && (
+        <DeleteResourceModal
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          resourceId={resource.id}
+          resourceTitle={resource.title}
+          onDeleted={() => {
+            navigate('/discover');
+          }}
+        />
+      )}
     </div>
   );
 };

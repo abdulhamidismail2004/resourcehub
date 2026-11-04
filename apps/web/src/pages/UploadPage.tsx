@@ -88,6 +88,10 @@ export const UploadPage: React.FC = () => {
       setErrorMsg('Please select a file to upload.');
       return;
     }
+    if (file.size > 4.5 * 1024 * 1024) {
+      setErrorMsg(`File size (${(file.size / (1024 * 1024)).toFixed(2)} MB) exceeds the Vercel demo payload limit (4.5 MB). Please choose a file under 4.5 MB.`);
+      return;
+    }
     if (!title.trim() || !description.trim() || !subject.trim() || !categoryId) {
       setErrorMsg('Please complete all required fields.');
       return;

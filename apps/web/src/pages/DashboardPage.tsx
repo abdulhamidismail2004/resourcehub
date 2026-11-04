@@ -6,6 +6,8 @@ import { api } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { ResourceCard } from '../components/resources/ResourceCard';
+import { EditResourceModal } from '../components/resources/EditResourceModal';
+import { DeleteResourceModal } from '../components/resources/DeleteResourceModal';
 import {
   Upload,
   Bookmark,
@@ -16,6 +18,8 @@ import {
   ArrowRight,
   School,
   Sparkles,
+  Edit3,
+  Trash2,
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
@@ -25,6 +29,8 @@ export const DashboardPage: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'uploads' | 'saved' | 'recommended'>('uploads');
+  const [editingResource, setEditingResource] = useState<any>(null);
+  const [deletingResource, setDeletingResource] = useState<any>(null);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -180,9 +186,8 @@ export const DashboardPage: React.FC = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {myResources.map((res: any) => (
-                  <Link
+                  <div
                     key={res.id}
-                    to={`/resources/${res.id}`}
                     className="p-5 rounded-2xl border border-border bg-card hover:border-primary/50 hover:shadow-lg transition-all flex flex-col justify-between gap-3"
                   >
                     <div className="space-y-2">
@@ -196,14 +201,36 @@ export const DashboardPage: React.FC = () => {
                           {res.status}
                         </Badge>
                       </div>
-                      <h4 className="font-bold text-sm text-foreground line-clamp-2">{res.title}</h4>
+                      <Link to={`/resources/${res.id}`} className="hover:text-primary transition-colors block">
+                        <h4 className="font-bold text-sm text-foreground line-clamp-2">{res.title}</h4>
+                      </Link>
                     </div>
 
                     <div className="pt-3 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{new Date(res.createdAt).toLocaleDateString()}</span>
-                      <span className="font-semibold text-foreground">{res.downloadCount} Downloads</span>
+                      <div className="flex items-center gap-1.5">
+                        <span>{new Date(res.createdAt).toLocaleDateString()}</span>
+                        <span>•</span>
+                        <span className="font-semibold text-foreground">{res.downloadCount} Downloads</span>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setEditingResource(res)}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                          title="Edit Resource"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingResource(res)}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          title="Delete Resource"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}
@@ -256,6 +283,41 @@ export const DashboardPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {editingResource && (
+        <EditResourceModal
+          isOpen={!!editingResource}
+          onClose={() => setEditingResource(null)}
+          resource={editingResource}
+          onSuccess={(updated) => {
+            setDashboardData((prev: any) => ({
+              ...prev,
+              myResources: prev?.myResources?.map((item: any) =>
+                item.id === editingResource.id ? { ...item, ...updated } : item
+              ),
+            }));
+          }}
+        />
+      )}
+
+      {deletingResource && (
+        <DeleteResourceModal
+          isOpen={!!deletingResource}
+          onClose={() => setDeletingResource(null)}
+          resourceId={deletingResource.id}
+          resourceTitle={deletingResource.title}
+          onDeleted={() => {
+            setDashboardData((prev: any) => ({
+              ...prev,
+              stats: {
+                ...prev?.stats,
+                uploaded: Math.max((prev?.stats?.uploaded || 1) - 1, 0),
+              },
+              myResources: prev?.myResources?.filter((item: any) => item.id !== deletingResource.id),
+            }));
+          }}
+        />
+      )}
     </div>
   );
 };

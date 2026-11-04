@@ -463,7 +463,8 @@ export const resourcesRoutes: FastifyPluginAsync = async (app: FastifyInstance) 
 
     // Upload via Storage Driver
     const storage = getStorageDriver();
-    await storage.upload(storageKey, fileBuffer, validation.detectedMime);
+    const uploadResult = await storage.upload(storageKey, fileBuffer, validation.detectedMime);
+    const finalStorageKey = uploadResult.storageKey || storageKey;
 
     // Initial status:
     // Teachers/moderators/admins are automatically approved; students/users in production might be pending,
@@ -501,7 +502,7 @@ export const resourcesRoutes: FastifyPluginAsync = async (app: FastifyInstance) 
     await db.insert(schema.resourceFiles).values({
       resourceId,
       originalName: fileName,
-      storageKey,
+      storageKey: finalStorageKey,
       mimeType: validation.detectedMime,
       fileSize: fileBuffer.length,
       fileExtension: validation.extension,
@@ -590,9 +591,6 @@ export const resourcesRoutes: FastifyPluginAsync = async (app: FastifyInstance) 
       }
     }
 
-    const storage = getStorageDriver();
-    const stream = await storage.getStream(record.storageKey);
-
     // Track download event
     await db.insert(schema.downloadEvents).values({
       resourceId: record.resourceId,
@@ -606,6 +604,17 @@ export const resourcesRoutes: FastifyPluginAsync = async (app: FastifyInstance) 
       .update(schema.resources)
       .set({ downloadCount: sql`${schema.resources.downloadCount} + 1` })
       .where(eq(schema.resources.id, record.resourceId));
+
+    if (record.storageKey.startsWith('http')) {
+      return reply.redirect(record.storageKey);
+    }
+
+    if (record.storageKey.startsWith('http')) {
+      return reply.redirect(record.storageKey);
+    }
+
+    const storage = getStorageDriver();
+    const stream = await storage.getStream(record.storageKey);
 
     // Headers for streaming download
     reply.header('Content-Type', record.mimeType);
@@ -647,6 +656,10 @@ export const resourcesRoutes: FastifyPluginAsync = async (app: FastifyInstance) 
       if (!isAuthor && !isModOrAdmin) {
         return reply.status(403).send({ success: false, error: 'Unauthorized.' });
       }
+    }
+
+    if (record.storageKey.startsWith('http')) {
+      return reply.redirect(record.storageKey);
     }
 
     const storage = getStorageDriver();
@@ -735,16 +748,61 @@ export const resourcesRoutes: FastifyPluginAsync = async (app: FastifyInstance) 
       return reply.status(403).send({ success: false, error: 'You are not authorized to edit this resource.' });
     }
 
-    const [updated] = await db
-      .update(schema.resources)
-      .set({
-        ...parsed.data,
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.resources.id, id))
-      .returning();
+    const { tags, ...fieldsToUpdate } = parsed.data;
 
-    return reply.send({ success: true, data: updated });
+    let updated = null;
+    if (Object.keys(fieldsToUpdate).length > 0) {
+      [updated] = await db
+        .update(schema.resources)
+        .set({
+          ...fieldsToUpdate,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.resources.id, id))
+        .returning();
+    }
+
+    if (tags !== undefined) {
+      await db.delete(schema.resourceTags).where(eq(schema.resourceTags.resourceId, id));
+
+      if (Array.isArray(tags) && tags.length > 0) {
+        for (const tagName of tags) {
+          const slug = tagName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          if (!slug) continue;
+
+          let [existingTag] = await db
+            .select({ id: schema.tags.id })
+            .from(schema.tags)
+            .where(eq(schema.tags.slug, slug))
+            .limit(1);
+
+          if (!existingTag) {
+            [existingTag] = await db
+              .insert(schema.tags)
+              .values({ name: tagName, slug })
+              .onConflictDoNothing()
+              .returning();
+          }
+
+          if (existingTag) {
+            await db
+              .insert(schema.resourceTags)
+              .values({ resourceId: id, tagId: existingTag.id })
+              .onConflictDoNothing();
+          }
+        }
+      }
+    }
+
+    await AuditService.log({
+      userId: req.user!.id,
+      action: 'RESOURCE_UPDATED',
+      targetType: 'resource',
+      targetId: id,
+      ipAddress: req.ip,
+    });
+
+    return reply.send({ success: true, data: updated, message: 'Resource updated successfully!' });
   });
 
   // 10. Delete Resource

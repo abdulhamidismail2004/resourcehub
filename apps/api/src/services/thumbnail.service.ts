@@ -16,7 +16,10 @@ export class ThumbnailService {
 
         const storage = getStorageDriver();
         const thumbKey = `thumb-${resourceId}.webp`;
-        await storage.upload(thumbKey, thumbBuffer, 'image/webp');
+        const res = await storage.upload(thumbKey, thumbBuffer, 'image/webp');
+        if (res.storageKey && res.storageKey.startsWith('http')) {
+          return res.storageKey;
+        }
         return `/api/resources/thumbnail/${thumbKey}`;
       }
     } catch (err) {
