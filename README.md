@@ -11,6 +11,13 @@
 
 ---
 
+### 🌐 Live Public Deployment
+- **Live Demo URL:** [https://resourcehub-demo-two.vercel.app](https://resourcehub-demo-two.vercel.app)
+- **Technical Performance Report (التقرير التقني الشامل):** [PROJECT_REPORT.md](./PROJECT_REPORT.md)
+- **Demo Accounts:** Admin (`admin@resourcehub.edu` / `AdminPassword123!`), Student (`student@resourcehub.edu` / `Password123!`)
+
+---
+
 ## 🌟 Key Features
 
 - **Multi-Format Resource Support**: Native handling for PDF documents, PowerPoint slides (PPT/PPTX), Word documents (DOC/DOCX), Excel spreadsheets (XLS/XLSX), and high-resolution academic figures/images.
