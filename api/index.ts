@@ -72,6 +72,11 @@ export default async function handler(req: any, res: any) {
     console.error('Serverless function error:', err);
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ success: false, error: err.message || 'Internal Server Error' }));
+    res.end(JSON.stringify({ 
+      success: false, 
+      error: err.message || 'Internal Server Error',
+      name: err.name,
+      stack: process.env.NODE_ENV !== 'production' || process.env.DEMO_MODE === 'true' ? err.stack : undefined
+    }));
   }
 }

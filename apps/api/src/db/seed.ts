@@ -11,9 +11,14 @@ export async function seedDatabase() {
   const db = await getDb();
   console.log('Seeding database with academic demonstration data...');
 
-  // Ensure uploads directory exists
-  const uploadsDir = path.resolve(process.cwd(), 'uploads');
-  fs.mkdirSync(uploadsDir, { recursive: true });
+  // Ensure uploads directory exists (use /tmp in serverless)
+  const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  const uploadsDir = isServerless ? '/tmp/uploads' : path.resolve(process.cwd(), 'uploads');
+  try {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  } catch {
+    // Ignore in read-only filesystems
+  }
 
   // 1. Seed Users
   const passwordHash = await bcrypt.hash('Password123!', 10);
@@ -195,7 +200,11 @@ trailer << /Root 1 0 R /Size 6 >>
 startxref
 424
 %%EOF`;
-    fs.writeFileSync(filePath, content, 'utf-8');
+    try {
+      fs.writeFileSync(filePath, content, 'utf-8');
+    } catch {
+      // Ignored if ephemeral storage is restricted
+    }
     const size = Buffer.byteLength(content);
     const checksum = crypto.createHash('sha256').update(content).digest('hex');
     return { storageKey, size, checksum };

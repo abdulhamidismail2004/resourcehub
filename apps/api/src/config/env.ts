@@ -1,13 +1,17 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Safely load .env in development without crashing in serverless/bundled environments
+if (!process.env.VERCEL) {
+  try {
+    dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+    dotenv.config();
+  } catch {
+    // Ignored in bundled environments
+  }
+}
 
-// Load .env
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
-dotenv.config();
+const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 
 export const config = {
   port: parseInt(process.env.PORT || '4000', 10),
@@ -24,7 +28,7 @@ export const config = {
   cookieSecret: process.env.COOKIE_SECRET || 'resourcehub-demo-cookie-secret-key-32-chars-min',
 
   storageDriver: (process.env.STORAGE_DRIVER || 'local') as 'local' | 's3' | 'vercel-blob',
-  storageLocalDir: path.resolve(process.cwd(), process.env.STORAGE_LOCAL_DIR || './uploads'),
+  storageLocalDir: isServerless ? '/tmp/uploads' : path.resolve(process.cwd(), process.env.STORAGE_LOCAL_DIR || './uploads'),
 
   s3: {
     endpoint: process.env.S3_ENDPOINT,
