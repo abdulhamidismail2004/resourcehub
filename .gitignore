@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+.turbo/
+.cache/
+*.log
+.env
+.env.local
+.env.*.local
+.data/
+uploads/
+coverage/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,22 @@
+{
+  "name": "resourcehub-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-Ready Educational Resource Sharing Platform",
+  "scripts": {
+    "dev:api": "npm run dev --prefix apps/api",
+    "dev:web": "npm run dev --prefix apps/web",
+    "build:shared": "npm run build --prefix packages/shared",
+    "build:api": "npm run build --prefix apps/api",
+    "build:web": "npm run build --prefix apps/web",
+    "build": "npm run build:shared && npm run build:api && npm run build:web",
+    "test:api": "npm run test --prefix apps/api",
+    "test:web": "npm run test --prefix apps/web",
+    "test": "npm run test:api && npm run test:web",
+    "db:migrate": "npm run db:migrate --prefix apps/api",
+    "db:seed": "npm run db:seed --prefix apps/api"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
