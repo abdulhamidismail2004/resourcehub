@@ -1,29 +1,32 @@
-import { buildApp } from '../apps/api/src/app.js';
-import { seedDatabase } from '../apps/api/src/db/seed.js';
 import type { FastifyInstance } from 'fastify';
 
 let appInstance: FastifyInstance | null = null;
-let initPromise: Promise<void> | null = null;
+let initPromise: Promise<FastifyInstance> | null = null;
 
-async function initialize() {
+async function getAppInstance(): Promise<FastifyInstance> {
+  if (appInstance) return appInstance;
+
+  let buildApp: any;
   try {
-    await seedDatabase();
-  } catch (err: any) {
-    console.warn('Database initialization note:', err.message);
+    const mod = await import('../apps/api/dist/app.js');
+    buildApp = mod.buildApp;
+  } catch {
+    const mod = await import('../apps/api/src/app.js');
+    buildApp = mod.buildApp;
   }
+
+  const app: FastifyInstance = await buildApp();
+  await app.ready();
+  appInstance = app;
+  return appInstance;
 }
 
 export default async function handler(req: any, res: any) {
   try {
     if (!initPromise) {
-      initPromise = initialize();
+      initPromise = getAppInstance();
     }
-    await initPromise;
-
-    if (!appInstance) {
-      appInstance = await buildApp();
-      await appInstance.ready();
-    }
+    const app = await initPromise;
 
     // Read payload if present
     let payload: any = undefined;
@@ -53,7 +56,7 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    const response = await appInstance.inject({
+    const response = await app.inject({
       method: req.method,
       url: targetUrl,
       headers: req.headers,
