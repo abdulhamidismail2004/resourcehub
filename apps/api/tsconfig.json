@@ -9,5 +9,6 @@
       "@resourcehub/shared": ["../../packages/shared/dist/index.d.ts"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/test", "**/*.test.ts"]
 }

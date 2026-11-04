@@ -10,5 +10,11 @@ build/
 .data/
 uploads/
 coverage/
+.vercel/
+scratch/
+api/index.js
+api/index.js.map
+api/index.d.ts
+api/index.d.ts.map
 .DS_Store
 Thumbs.db
