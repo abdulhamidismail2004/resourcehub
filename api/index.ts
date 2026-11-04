@@ -1,10 +1,25 @@
 import { buildApp } from '../apps/api/src/app.js';
+import { seedDatabase } from '../apps/api/src/db/seed.js';
 import type { FastifyInstance } from 'fastify';
 
 let appInstance: FastifyInstance | null = null;
+let initPromise: Promise<void> | null = null;
+
+async function initialize() {
+  try {
+    await seedDatabase();
+  } catch (err: any) {
+    console.warn('Database initialization note:', err.message);
+  }
+}
 
 export default async function handler(req: any, res: any) {
   try {
+    if (!initPromise) {
+      initPromise = initialize();
+    }
+    await initPromise;
+
     if (!appInstance) {
       appInstance = await buildApp();
       await appInstance.ready();
@@ -28,9 +43,19 @@ export default async function handler(req: any, res: any) {
       }
     }
 
+    // Resolve target URL (recover original path if rewritten to /api/index)
+    let targetUrl = req.url || '/api/health';
+    if (targetUrl.startsWith('/api/index')) {
+      const matched = req.headers['x-matched-path'];
+      if (matched && typeof matched === 'string') {
+        const queryIndex = targetUrl.indexOf('?');
+        targetUrl = matched + (queryIndex !== -1 ? targetUrl.slice(queryIndex) : '');
+      }
+    }
+
     const response = await appInstance.inject({
       method: req.method,
-      url: req.url,
+      url: targetUrl,
       headers: req.headers,
       query: req.query,
       payload,

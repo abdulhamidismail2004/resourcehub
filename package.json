@@ -4,12 +4,12 @@
   "private": true,
   "description": "Production-Ready Educational Resource Sharing Platform",
   "scripts": {
-    "install:all": "cd packages/shared && npm install && npm run build && cd ../../apps/api && npm install && cd ../../apps/web && npm install",
+    "install:all": "npm install && npm --prefix packages/shared install && npm --prefix packages/shared run build && npm --prefix apps/api install && npm --prefix apps/web install",
     "dev:api": "npm run dev --prefix apps/api",
     "dev:web": "npm run dev --prefix apps/web",
-    "build:shared": "cd packages/shared && npm run build",
-    "build:api": "cd apps/api && npm run build",
-    "build:web": "cd apps/web && npm run build",
+    "build:shared": "npm --prefix packages/shared run build",
+    "build:api": "npm --prefix apps/api run build",
+    "build:web": "npm --prefix apps/web run build",
     "build": "npm run build:shared && npm run build:api && npm run build:web",
     "test:api": "npm run test --prefix apps/api",
     "test:web": "npm run test --prefix apps/web",
@@ -17,9 +17,30 @@
     "db:migrate": "npm run db:migrate --prefix apps/api",
     "db:seed": "npm run db:seed --prefix apps/api"
   },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.714.0",
+    "@electric-sql/pglite": "^0.2.14",
+    "@fastify/compress": "^8.0.1",
+    "@fastify/cookie": "^10.0.1",
+    "@fastify/cors": "^10.0.1",
+    "@fastify/multipart": "^9.0.1",
+    "@fastify/rate-limit": "^10.1.1",
+    "@fastify/swagger": "^9.4.0",
+    "@fastify/swagger-ui": "^5.2.0",
+    "@vercel/blob": "^2.8.2",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.38.3",
+    "fastify": "^5.2.0",
+    "pg": "^8.13.1",
+    "zod": "^3.24.1"
+  },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.1",
+    "@types/pg": "^8.11.10",
     "@vercel/node": "^3.2.32",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
   "engines": {
