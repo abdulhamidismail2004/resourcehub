@@ -4,7 +4,7 @@
   "private": true,
   "description": "Production-Ready Educational Resource Sharing Platform",
   "scripts": {
-    "install:all": "npm install && npm --prefix packages/shared install && npm --prefix packages/shared run build && npm --prefix apps/api install && npm --prefix apps/web install",
+    "install:all": "npm install --include=dev && cd packages/shared && npm install --include=dev && npm run build && cd ../../apps/api && npm install --include=dev && cd ../../apps/web && npm install --include=dev",
     "dev:api": "npm run dev --prefix apps/api",
     "dev:web": "npm run dev --prefix apps/web",
     "build:shared": "npm --prefix packages/shared run build",
@@ -28,20 +28,20 @@
     "@fastify/swagger": "^9.4.0",
     "@fastify/swagger-ui": "^5.2.0",
     "@vercel/blob": "^2.8.2",
+    "@vercel/node": "^3.2.32",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.38.3",
     "fastify": "^5.2.0",
     "pg": "^8.13.1",
+    "typescript": "^5.7.2",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.1",
     "@types/pg": "^8.11.10",
-    "@vercel/node": "^3.2.32",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "tsx": "^4.19.2"
   },
   "engines": {
     "node": ">=20.0.0"
